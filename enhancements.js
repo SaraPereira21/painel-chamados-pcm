@@ -6,7 +6,6 @@ const historicalRecords=[
  {date:'11/10/2026',asset:'EG-169',call:'CH-0134',os:'OS-200156884',city:'Imperatriz',uf:'MA',problem:'Perda de força em operação',diagnosis:'Filtro de combustível saturado',cause:'Condição operacional',status:'Encerrado'}
 ];
 
-// Menu operacional enxuto: auditoria continua registrada internamente e a base técnica fica nos bastidores.
 function renderNav(){
  const visible=navItems.filter(x=>!['audit','base'].includes(x[0]));
  document.getElementById('nav').innerHTML=`<div class="nav">${visible.map(x=>`<button class="${current===x[0]?'active':''}" onclick="go('${x[0]}')">${x[1]}</button>`).join('')}</div>`;
@@ -25,6 +24,17 @@ function historyResultHTML(id){
  const rows=[...currentRows,...historicalRecords.filter(r=>r.asset===id)].sort((x,y)=>y.date.split('/').reverse().join('').localeCompare(x.date.split('/').reverse().join('')));
  return `<div class="asset-head"><div><h2>${a.id} · ${esc(a.type)}</h2><div class="muted small">${esc(a.brand)} ${esc(a.model)} · Local atual: ${esc(a.city)}/${esc(a.uf)} · ${esc(a.contract)}</div></div><span class="badge info">${rows.length} ocorrência${rows.length===1?'':'s'}</span></div>
  <div class="card scroll"><table class="table"><tr><th>Data</th><th>NS / Chamado</th><th>OS Engeman</th><th>Local</th><th>Problema relatado</th><th>Diagnóstico / causa</th><th>Status</th></tr>${rows.length?rows.map(r=>`<tr class="${r.live?'rowclick':''}" ${r.live?`onclick="openCall('${r.call}')"`:''}><td>${r.date}</td><td><b>${r.call}</b></td><td>${r.os}</td><td>${esc(r.city)}/${esc(r.uf)}</td><td>${esc(r.problem)}</td><td>${esc(r.diagnosis)}${r.cause!=='—'?`<div class="small muted">${esc(r.cause)}</div>`:''}</td><td><span class="badge ${r.status==='Encerrado'?'ok':'info'}">${esc(r.status)}</span></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhuma ocorrência registrada.</td></tr>'}</table></div>`;
+}
+
+// Etiqueta simples para impressão e fixação no equipamento.
+function qrModal(id){
+ closeModal();
+ const a=aById(id);
+ document.getElementById('modalBody').innerHTML=`<div class="qr-label"><div class="qr-prefix">${esc(id)}</div>${a?`<div class="qr-equipment">${esc(a.type)}</div>`:''}<div id="qrcode" class="qrbox"></div><div class="qr-instruction"><b>Solicitar atendimento</b><br>Aponte a câmera do celular para o QR Code e relate o problema apresentado por este equipamento.</div><button class="btn qr-print" onclick="window.print()">Imprimir etiqueta</button></div>`;
+ document.getElementById('modal').classList.remove('hidden');
+ const url=location.href.split('#')[0]+'#notificar='+encodeURIComponent(id);
+ if(window.QRCode)new QRCode(document.getElementById('qrcode'),{text:url,width:220,height:220});
+ else document.getElementById('qrcode').innerHTML='<b>QR indisponível sem internet.</b>';
 }
 
 renderNav();
